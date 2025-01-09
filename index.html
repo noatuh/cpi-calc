@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CPI Inflation Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        header {
+            background-color: #0078d7;
+            color: white;
+            text-align: center;
+            padding: 1rem 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 2rem auto;
+            padding: 1rem;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+        input, select, button {
+            width: calc(100% - 20px); /* Ensures inputs stay within container */
+            padding: 0.8rem;
+            font-size: 1rem;
+            margin-top: 0.3rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #0078d7;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+        button:hover {
+            background-color: #005bb5;
+        }
+        .result {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: #f0f8ff;
+            border-left: 4px solid #0078d7;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>CPI Inflation Calculator</h1>
+    </header>
+    <div class="container">
+        <form id="inflationForm">
+            <div class="form-group">
+                <label for="amount">Initial Amount ($):</label>
+                <input type="number" id="amount" name="amount" placeholder="Enter the amount" required>
+            </div>
+            <div class="form-group">
+                <label for="startYear">Start Year:</label>
+                <input type="number" id="startYear" name="startYear" placeholder="e.g., 2000" required>
+            </div>
+            <div class="form-group">
+                <label for="endYear">End Year:</label>
+                <input type="number" id="endYear" name="endYear" placeholder="e.g., 2023" required>
+            </div>
+            <div class="form-group">
+                <button type="button" id="calculateButton">Calculate Inflation</button>
+            </div>
+        </form>
+        <div class="result" id="result" style="display: none;">
+            <p id="resultText"></p>
+        </div>
+    </div>
+
+    <script>
+        const cpiData = {
+            1913: 9.9, 1914: 10.0, 1915: 10.1, 1916: 10.9, 1917: 12.8, 1918: 15.0,
+            1919: 17.3, 1920: 20.0, 1921: 17.9, 1922: 16.8, 1923: 17.1, 1924: 17.1,
+            1925: 17.5, 1926: 17.7, 1927: 17.4, 1928: 17.1, 1929: 17.1, 1930: 16.7,
+            1931: 15.2, 1932: 13.7, 1933: 13.0, 1934: 13.4, 1935: 13.7, 1936: 13.9,
+            1937: 14.4, 1938: 14.1, 1939: 13.9, 1940: 14.0, 1941: 14.7, 1942: 16.3,
+            1943: 17.3, 1944: 17.6, 1945: 18.0, 1946: 19.5, 1947: 22.3, 1948: 24.1,
+            1949: 23.8, 1950: 24.1, 1951: 26.0, 1952: 26.5, 1953: 26.7, 1954: 26.9,
+            1955: 26.8, 1956: 27.2, 1957: 28.1, 1958: 28.9, 1959: 29.1, 1960: 29.6,
+            1961: 29.9, 1962: 30.2, 1963: 30.6, 1964: 31.0, 1965: 31.5, 1966: 32.4,
+            1967: 33.4, 1968: 34.8, 1969: 36.7, 1970: 38.8, 1971: 40.5, 1972: 41.8,
+            1973: 44.4, 1974: 49.3, 1975: 53.8, 1976: 56.9, 1977: 60.6, 1978: 65.2,
+            1979: 72.6, 1980: 82.4, 1981: 90.9, 1982: 96.5, 1983: 99.6, 1984: 103.9,
+            1985: 107.6, 1986: 109.6, 1987: 113.6, 1988: 118.3, 1989: 124.0, 1990: 130.7,
+            1991: 136.2, 1992: 140.3, 1993: 144.5, 1994: 148.2, 1995: 152.4, 1996: 156.9,
+            1997: 160.5, 1998: 163.0, 1999: 166.6, 2000: 172.2, 2001: 177.1, 2002: 179.9,
+            2003: 184.0, 2004: 188.9, 2005: 195.3, 2006: 201.6, 2007: 207.3, 2008: 215.3,
+            2009: 214.5, 2010: 218.1, 2011: 224.9, 2012: 229.6, 2013: 233.0, 2014: 236.7,
+            2015: 237.0, 2016: 240.0, 2017: 245.1, 2018: 251.1, 2019: 255.7, 2020: 258.8,
+            2021: 271.0, 2022: 292.6, 2023: 305.0
+        };
+
+        document.getElementById('calculateButton').addEventListener('click', function() {
+            const amount = parseFloat(document.getElementById('amount').value);
+            const startYear = parseInt(document.getElementById('startYear').value);
+            const endYear = parseInt(document.getElementById('endYear').value);
+
+            if (!amount || !startYear || !endYear || startYear >= endYear) {
+                alert('Please enter valid input values.');
+                return;
+            }
+
+            if (!cpiData[startYear] || !cpiData[endYear]) {
+                alert('CPI data is not available for the entered years.');
+                return;
+            }
+
+            const startCPI = cpiData[startYear];
+            const endCPI = cpiData[endYear];
+            const adjustedAmount = (amount * endCPI) / startCPI;
+
+            document.getElementById('resultText').textContent = 
+                `An item costing $${amount.toFixed(2)} in ${startYear} would cost $${adjustedAmount.toFixed(2)} in ${endYear}.`;
+            document.getElementById('result').style.display = 'block';
+        });
+    </script>
+</body>
+</html>
